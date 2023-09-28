@@ -3,20 +3,28 @@ require("dotenv").config({
 });
 
 const express = require("express");
+const db = require("./modules/db_connect");
+const cors = require("cors");
 
 const app = express();
-
-const db = require("./modules/db_connect");
+const corsOption = {
+    credentials: true,
+    origin: (origin, cb) => {
+        cb(null, true);
+    },
+};
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(cors(corsOption));
+// 測試撈
+app.post("/", async (req, res) => {
+    console.log(req);
+    // const sql = `SELECT NAME,PLANTNAME, UNITID,UNITNAME,DEVISION FROM AconProject.V_USERDEPT where AconProject.V_USERDEPT.NAME="?";
+    // `;
+    // const [result] = await db.query(sql);
 
-// 測試
-app.get("/", async (req, res) => {
-    const sql = `SELECT * FROM AconProject.V_USERDEPT`;
-    const [result] = await db.query(sql);
-
-    res.json(result);
+    // res.json(result);
 });
 
 const port = process.env.PORT || 3000;
