@@ -20,7 +20,10 @@ app.use(cors(corsOption));
 
 // 測試
 app.post("/test", async (req, res) => {
-    console.log(req.body);
+    console.log("req.body", req.body);
+    console.log("test", req.body.postData.deviceStockData);
+    // console.log(req.body);
+    // console.log(req.body);
     // const sql = "SELECT * FROM `V_USERDEPT` WHERE 1";
     // const [result] = await db.query(sql);
     // res.json(result);
@@ -178,14 +181,13 @@ app.post("/userRent", async (req, res) => {
             // console.log(deviceUpdateResult);
 
             if (deviceUpdateResult.affectedRows) {
-                const checklistSql = `
-                INSERT INTO v_checklistdata
+                const checklistSql = `INSERT INTO v_checklistdata
                 (sid, checklistCompany,checklistDepartment,checklistDepartmentNumber,
-                checklistDivision, checklistDevice, checklistName, checklistTime,
+                checklistDivision, checklistDevice, checklistDeviceDescription,checklistName, checklistTime,
                 checklistType, checklistExtensionNumber, checklistSignature) 
                 VALUES (NULL,'${req.body.deviceRentCompany}','${req.body.deviceRentDepartment}','${req.body.deviceRentDepartmentNumber}',
-                '${req.body.deviceRentDivision}','${v.deviceStockName}','${req.body.deviceRentName}','${req.body.deviceRentSubmitTime}',
-                '設備','${req.body.deviceRentExtensionNumber}','${req.body.deviceRentSignature}')`;
+                '${req.body.deviceRentDivision}','${v.deviceStockName}','${v.deviceStockDescription}','${req.body.deviceRentName}',
+                '${req.body.deviceRentSubmitTime}','設備','${req.body.deviceRentExtensionNumber}','${req.body.deviceRentSignature}')`;
 
                 const [checklistResult] = await db.query(checklistSql);
                 console.log(checklistResult);
@@ -203,7 +205,48 @@ app.post("/userRent", async (req, res) => {
     });
 });
 
+app.post("/userReturnRender", async (req, res) => {
+    const output = {
+        success: false,
+        error: "",
+        row: {},
+    };
+    console.log(req.body);
+    const sql = `SElECT v_checklistdata.*,v_userdept.PLANTNAME,v_userdept.UNITID,v_userdept.UNITNAME,v_userdept.DEVISION 
+    FROM v_checklistdata,v_userdept 
+    WHERE v_userdept.NAME="${req.body.postData}" 
+    AND v_checklistdata.checklistName="${req.body.postData}";
+    `;
+    const [userDataResult] = await db.query(sql);
+
+    // console.log("userDataResult", userDataResult);
+
+    try {
+        if (userDataResult.length) {
+            output.success = true;
+            output.row = userDataResult;
+            res.json(output);
+        } else {
+            res.json(output);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+// 使用者歸還
+app.post("/userReturn", async (req, res) => {
+    console.log(req.body.postData.deviceReturnData);
+    const returnData=req.body.postData.deviceReturnData
+    returnData.map((v,i)=>{
+        console.log(v)
+        // const checklistDeleteSql=`DELETE FROM v_checklistdata WHERE v_checklistdata.checklistName="${v.}"`
+    })
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`伺服器啟動:${port}`));
 
 module.exports = app;
+
+// FIXME: try/catch要包住的範圍要包含sql嗎？
