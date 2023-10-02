@@ -171,7 +171,7 @@ app.post("/userRent", async (req, res) => {
     };
     // console.log("req.body", req.body);
     req.body.deviceRentAlreadyRentData.map(async (v, i) => {
-        // console.log(v);
+        console.log(v);
         try {
             const deviceUpdateSql = `UPDATE v_devicestockdata 
             SET deviceStockRenter='${req.body.deviceRentName}' 
@@ -195,6 +195,8 @@ app.post("/userRent", async (req, res) => {
                     output.success = true;
                     if (output.success) {
                         console.log("output.success", output.success);
+
+                        // FIXME: 不能重複送
                         res.json(output);
                     }
                 }
@@ -235,14 +237,17 @@ app.post("/userReturnRender", async (req, res) => {
 });
 
 // 使用者歸還
-app.post("/userReturn", async (req, res) => {
-    console.log(req.body.postData.deviceReturnData);
-    const returnData=req.body.postData.deviceReturnData
-    returnData.map((v,i)=>{
-        console.log(v)
-        // const checklistDeleteSql=`DELETE FROM v_checklistdata WHERE v_checklistdata.checklistName="${v.}"`
-    })
-});
+// app.post("/userReturn", async (req, res) => {
+//     console.log(req.body.postData.deviceReturnData);
+//     const returnData = req.body.postData.deviceReturnData;
+//     returnData.map(async (v, i) => {
+//         console.log(v);
+//         const checklistDeleteSql = `DELETE FROM v_checklistdata WHERE v_checklistdata.checklistName="${v.deviceReturnName}"`;
+
+//         const [checklistDeleteResult] = await db.query(checklistDeleteSql);
+//         console.log(checklistDeleteResult)
+//     });
+// });
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`伺服器啟動:${port}`));
@@ -250,3 +255,7 @@ app.listen(port, () => console.log(`伺服器啟動:${port}`));
 module.exports = app;
 
 // FIXME: try/catch要包住的範圍要包含sql嗎？
+
+// UPDATE v_devicestockdata
+// SET deviceStockRenter = ''
+// WHERE v_devicestockdata.deviceStockRenter = "甘凱文"
