@@ -150,7 +150,7 @@ app.get("/getDeviceStockData", async (req, res) => {
 
     try {
         if (result.length) {
-            console.log(result);
+            // console.log(result);
             output.success = true;
             output.row = result;
             res.json(output);
@@ -165,45 +165,49 @@ app.get("/getDeviceStockData", async (req, res) => {
 // userRent，目前庫存出借的資料
 app.post("/userRent", async (req, res) => {
     const output = {
-        success: false,
-        error: "",
         row: [],
     };
     // console.log("req.body", req.body);
-    req.body.deviceRentAlreadyRentData.map(async (v, i) => {
-        console.log(v);
-        try {
-            const deviceUpdateSql = `UPDATE v_devicestockdata 
-            SET deviceStockRenter='${req.body.deviceRentName}' 
+
+    // 跑多次的寫法;
+    const userRent = async () => {
+        output.row = await Promise.all(
+            req.body.deviceRentAlreadyRentData.map(async (v, i) => {
+                try {
+                    const deviceUpdateSql = `UPDATE v_devicestockdata
+            SET deviceStockRenter='${req.body.deviceRentName}'
             WHERE v_devicestockdata.deviceStockName="${v.deviceStockName}"`;
 
-            const [deviceUpdateResult] = await db.query(deviceUpdateSql);
-            // console.log(deviceUpdateResult);
+                    const [deviceUpdateResult] = await db.query(deviceUpdateSql);
+                    // console.log(deviceUpdateResult);
 
-            if (deviceUpdateResult.affectedRows) {
-                const checklistSql = `INSERT INTO v_checklistdata
+                    if (deviceUpdateResult.affectedRows) {
+                        const checklistSql = `INSERT INTO v_checklistdata
                 (sid, checklistCompany,checklistDepartment,checklistDepartmentNumber,
-                checklistDivision, checklistDevice, checklistDeviceDescription,checklistName, checklistTime,
-                checklistType, checklistExtensionNumber, checklistSignature) 
+                checklistDivision, checklistDevice, checklistDeviceDescription,checklistName,
+                checklistTime,checklistType, checklistExtensionNumber, checklistSignature)
                 VALUES (NULL,'${req.body.deviceRentCompany}','${req.body.deviceRentDepartment}','${req.body.deviceRentDepartmentNumber}',
                 '${req.body.deviceRentDivision}','${v.deviceStockName}','${v.deviceStockDescription}','${req.body.deviceRentName}',
                 '${req.body.deviceRentSubmitTime}','設備','${req.body.deviceRentExtensionNumber}','${req.body.deviceRentSignature}')`;
-
-                const [checklistResult] = await db.query(checklistSql);
-                console.log(checklistResult);
-                if (checklistResult.affectedRows) {
-                    output.success = true;
-                    if (output.success) {
-                        console.log("output.success", output.success);
-
-                        // FIXME: 不能重複送
-                        res.json(output);
+                        const [checklistResult] = await db.query(checklistSql);
+                        if (checklistResult.affectedRows) {
+                            return "success";
+                        } else {
+                            return "fail";
+                        }
+                    } else {
+                        return "fail";
                     }
+                } catch (error) {
+                    console.log(error);
                 }
-            }
-        } catch (error) {
-            console.log(error);
-        }
+            })
+        );
+        return output;
+    };
+
+    await userRent().then((r) => {
+        res.json(output);
     });
 });
 
@@ -237,17 +241,57 @@ app.post("/userReturnRender", async (req, res) => {
 });
 
 // 使用者歸還
-// app.post("/userReturn", async (req, res) => {
-//     console.log(req.body.postData.deviceReturnData);
-//     const returnData = req.body.postData.deviceReturnData;
-//     returnData.map(async (v, i) => {
-//         console.log(v);
-//         const checklistDeleteSql = `DELETE FROM v_checklistdata WHERE v_checklistdata.checklistName="${v.deviceReturnName}"`;
+app.post("/userReturn", async (req, res) => {
+    const output = {
+        row: [],
+    };
+    console.log(req.body.postData.deviceReturnData);
 
-//         const [checklistDeleteResult] = await db.query(checklistDeleteSql);
-//         console.log(checklistDeleteResult)
-//     });
-// });
+    const returnData = req.body.postData.deviceReturnData;
+
+    const userReturn = async () => {
+        output.row = await Promise.all(
+            returnData.map(async (v, i) => {
+                try {
+                    console.log(v);
+                    const checklistDeleteSql = `
+                    DELETE FROM v_checklistdata 
+                    WHERE v_checklistdata.checklistName="${v.deviceReturnName}" 
+                    AND v_checklistdata.sid=${v.sid}
+                    `;
+                    const [checklistDeleteResult] = await db.query(checklistDeleteSql);
+                    // console.log(checklistDeleteResult);
+
+                    if (checklistDeleteResult.affectedRows) {
+                        const deviceUpdateSql = `
+                        UPDATE v_devicestockdata
+                        SET deviceStockRenter = ''
+                        WHERE v_devicestockdata.deviceStockRenter = "${v.deviceReturnName}"
+                        AND v_devicestockdata.deviceStockName="${v.checklistDevice}"
+                        `;
+                        const [deviceUpdateResult] = await db.query(deviceUpdateSql);
+
+                        console.log("48264872364287364782364872", deviceUpdateResult);
+                        if (deviceUpdateResult.affectedRows) {
+                            return "success";
+                        } else {
+                            return "fail";
+                        }
+                    } else {
+                        return "fail";
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            })
+        );
+
+        return output;
+    };
+    await userReturn().then(() => {
+        res.json(output);
+    });
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`伺服器啟動:${port}`));
@@ -255,7 +299,3 @@ app.listen(port, () => console.log(`伺服器啟動:${port}`));
 module.exports = app;
 
 // FIXME: try/catch要包住的範圍要包含sql嗎？
-
-// UPDATE v_devicestockdata
-// SET deviceStockRenter = ''
-// WHERE v_devicestockdata.deviceStockRenter = "甘凱文"
