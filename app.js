@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors(corsOption));
 
-// 測試
+// test，測試路由
 app.post("/test", async (req, res) => {
     console.log("req.body", req.body);
     console.log("test", req.body.postData.deviceStockData);
@@ -29,7 +29,7 @@ app.post("/test", async (req, res) => {
     // res.json(result);
 });
 
-// 使用者部門資料
+// getUserData，撈使用者部門資料
 app.post("/getUserData", async (req, res) => {
     const output = {
         success: false,
@@ -38,7 +38,8 @@ app.post("/getUserData", async (req, res) => {
     };
 
     // console.log(req.body);
-    const sql = `SELECT NAME,PLANTNAME, UNITID,UNITNAME,DEVISION 
+    const sql = `
+    SELECT NAME,PLANTNAME, UNITID,UNITNAME,DEVISION 
     FROM AconProject.V_USERDEPT 
     where AconProject.V_USERDEPT.NAME='${req.body.postData}'`;
 
@@ -57,7 +58,7 @@ app.post("/getUserData", async (req, res) => {
     }
 });
 
-// 儲存訪客資料
+// saveVisitorData，儲存訪客資料
 app.post("/saveVisitorData", async (req, res) => {
     const output = {
         success: false,
@@ -67,7 +68,13 @@ app.post("/saveVisitorData", async (req, res) => {
     // console.log(req.body.postData);
     const postData = req.body.postData;
 
-    const sql = `INSERT INTO v_vistitordata(sid, visitorAconCompany, visitorCarNumber, visitorDepartment, visitorDepartmentNumber, visitorDivision, visitorDriveOrNot, visitorGuestCompany, visitorInterviewee, visitorMember, visitorName, visitorReason, visitorSubmitTime) VALUES (NULL,'${postData.visitorAconCompany}','${postData.visitorCarNumber}','${postData.visitorDepartment}','${postData.visitorDepartmentNumber}','${postData.visitorDivision}','${postData.visitorDriveOrNot}','${postData.visitorGuestCompany}','${postData.visitorInterviewee}','${postData.visitorMember}','${postData.visitorName}','${postData.visitorReason}','${postData.visitorSubmitTime}')`;
+    const sql = `INSERT INTO v_vistitordata(sid, visitorAconCompany, visitorCarNumber, visitorDepartment, visitorDepartmentNumber, visitorDivision, visitorDriveOrNot, visitorGuestCompany, 
+    visitorInterviewee, visitorMember, visitorName, visitorReason,
+    visitorSubmitTime) 
+    VALUES (NULL,'${postData.visitorAconCompany}','${postData.visitorCarNumber}','${postData.visitorDepartment}',
+    '${postData.visitorDepartmentNumber}','${postData.visitorDivision}','${postData.visitorDriveOrNot}',
+    '${postData.visitorGuestCompany}','${postData.visitorInterviewee}','${postData.visitorMember}',
+    '${postData.visitorName}','${postData.visitorReason}','${postData.visitorSubmitTime}')`;
 
     const [result] = await db.query(sql);
     try {
@@ -84,7 +91,7 @@ app.post("/saveVisitorData", async (req, res) => {
     }
 });
 
-// 儲存預約的資料
+// saveReserveData，儲存訪客預約的資料
 app.post("/saveReserveData", async (req, res) => {
     const output = {
         success: false,
@@ -94,7 +101,15 @@ app.post("/saveReserveData", async (req, res) => {
     // console.log(req.body.postData);
     const postData = req.body.postData;
     console.log(postData);
-    const sql = `INSERT INTO v_reservedata(sid, reserveAconCompany, reserveCarNumber, reserveDepartment, reserveDepartmentNumber, reserveDivision, reserveDriveOrNot, reserveGuestCompany, reserveInterviewee, reserveMember, reserveName, reserveReason, reserveSubmitTime) VALUES (NULL,'${postData.reserveAconCompany}','${postData.reserveCarNumber}','${postData.reserveDepartment}','${postData.reserveDepartmentNumber}','${postData.reserveDivision}','${postData.reserveDriveOrNot}','${postData.reserveGuestCompany}','${postData.reserveInterviewee}','${postData.reserveMember}','${postData.reserveName}','${postData.reserveReason}','${postData.reserveSubmitTime}')`;
+    const sql = `
+    INSERT INTO v_reservedata(sid, reserveAconCompany, reserveCarNumber, reserveDepartment, 
+    reserveDepartmentNumber, reserveDivision, reserveDriveOrNot, reserveGuestCompany, 
+    reserveInterviewee, reserveMember, reserveName, reserveReason, 
+    reserveSubmitTime) 
+    VALUES (NULL,'${postData.reserveAconCompany}','${postData.reserveCarNumber}','${postData.reserveDepartment}',
+    '${postData.reserveDepartmentNumber}','${postData.reserveDivision}','${postData.reserveDriveOrNot}',
+    '${postData.reserveGuestCompany}','${postData.reserveInterviewee}','${postData.reserveMember}',
+    '${postData.reserveName}','${postData.reserveReason}','${postData.reserveSubmitTime}')`;
 
     // 後端要再做過濾嗎?
     const [result] = await db.query(sql);
@@ -112,7 +127,7 @@ app.post("/saveReserveData", async (req, res) => {
     }
 });
 
-// 訪客已預約過點選modal撈reserve資料
+// bookingReserve，撈已預約過的訪客的資料(點modal的)
 app.post("/bookingReserve", async (req, res) => {
     const output = {
         success: false,
@@ -139,7 +154,7 @@ app.post("/bookingReserve", async (req, res) => {
     }
 });
 
-// 撈庫存設備資料
+// getDeviceStockData，撈庫存設備資料
 app.get("/getDeviceStockData", async (req, res) => {
     const output = {
         success: false,
@@ -162,7 +177,7 @@ app.get("/getDeviceStockData", async (req, res) => {
     }
 });
 
-// userRent，目前庫存出借的資料
+// userRent，使用者借用
 app.post("/userRent", async (req, res) => {
     const output = {
         row: [],
@@ -174,21 +189,24 @@ app.post("/userRent", async (req, res) => {
         output.row = await Promise.all(
             req.body.deviceRentAlreadyRentData.map(async (v, i) => {
                 try {
-                    const deviceUpdateSql = `UPDATE v_devicestockdata
-            SET deviceStockRenter='${req.body.deviceRentName}'
-            WHERE v_devicestockdata.deviceStockName="${v.deviceStockName}"`;
+                    const deviceUpdateSql = `
+                    UPDATE v_devicestockdata
+                    SET deviceStockRenter='${req.body.deviceRentName}'
+                    WHERE v_devicestockdata.deviceStockName="${v.deviceStockName}"`;
 
                     const [deviceUpdateResult] = await db.query(deviceUpdateSql);
                     // console.log(deviceUpdateResult);
 
                     if (deviceUpdateResult.affectedRows) {
-                        const checklistSql = `INSERT INTO v_checklistdata
-                (sid, checklistCompany,checklistDepartment,checklistDepartmentNumber,
-                checklistDivision, checklistDevice, checklistDeviceDescription,checklistName,
-                checklistTime,checklistType, checklistExtensionNumber, checklistSignature)
-                VALUES (NULL,'${req.body.deviceRentCompany}','${req.body.deviceRentDepartment}','${req.body.deviceRentDepartmentNumber}',
-                '${req.body.deviceRentDivision}','${v.deviceStockName}','${v.deviceStockDescription}','${req.body.deviceRentName}',
-                '${req.body.deviceRentSubmitTime}','設備','${req.body.deviceRentExtensionNumber}','${req.body.deviceRentSignature}')`;
+                        const checklistSql = `
+                        INSERT INTO v_checklistdata
+                        (sid, checklistCompany,checklistDepartment,checklistDepartmentNumber,
+                        checklistDivision, checklistDevice, checklistDeviceDescription,checklistName,
+                        checklistTime,checklistType, checklistExtensionNumber, checklistSignature)
+                        VALUES (NULL,'${req.body.deviceRentCompany}','${req.body.deviceRentDepartment}','${req.body.deviceRentDepartmentNumber}',
+                        '${req.body.deviceRentDivision}','${v.deviceStockName}','${v.deviceStockDescription}','${req.body.deviceRentName}',
+                        '${req.body.deviceRentSubmitTime}','設備','${req.body.deviceRentExtensionNumber}','${req.body.deviceRentSignature}')`;
+
                         const [checklistResult] = await db.query(checklistSql);
                         if (checklistResult.affectedRows) {
                             return "success";
@@ -211,6 +229,7 @@ app.post("/userRent", async (req, res) => {
     });
 });
 
+//
 app.post("/userReturnRender", async (req, res) => {
     const output = {
         success: false,
@@ -218,11 +237,11 @@ app.post("/userReturnRender", async (req, res) => {
         row: {},
     };
     console.log(req.body);
-    const sql = `SElECT v_checklistdata.*,v_userdept.PLANTNAME,v_userdept.UNITID,v_userdept.UNITNAME,v_userdept.DEVISION 
+    const sql = `
+    SElECT v_checklistdata.*,v_userdept.PLANTNAME,v_userdept.UNITID,v_userdept.UNITNAME,v_userdept.DEVISION 
     FROM v_checklistdata,v_userdept 
     WHERE v_userdept.NAME="${req.body.postData}" 
-    AND v_checklistdata.checklistName="${req.body.postData}";
-    `;
+    AND v_checklistdata.checklistName="${req.body.postData}"`;
     const [userDataResult] = await db.query(sql);
 
     // console.log("userDataResult", userDataResult);
@@ -240,7 +259,7 @@ app.post("/userReturnRender", async (req, res) => {
     }
 });
 
-// 使用者歸還
+// userReturn，使用者歸還
 app.post("/userReturn", async (req, res) => {
     const output = {
         row: [],
@@ -257,8 +276,7 @@ app.post("/userReturn", async (req, res) => {
                     const checklistDeleteSql = `
                     DELETE FROM v_checklistdata 
                     WHERE v_checklistdata.checklistName="${v.deviceReturnName}" 
-                    AND v_checklistdata.sid=${v.sid}
-                    `;
+                    AND v_checklistdata.sid=${v.sid}`;
                     const [checklistDeleteResult] = await db.query(checklistDeleteSql);
                     // console.log(checklistDeleteResult);
 
@@ -267,8 +285,8 @@ app.post("/userReturn", async (req, res) => {
                         UPDATE v_devicestockdata
                         SET deviceStockRenter = ''
                         WHERE v_devicestockdata.deviceStockRenter = "${v.deviceReturnName}"
-                        AND v_devicestockdata.deviceStockName="${v.checklistDevice}"
-                        `;
+                        AND v_devicestockdata.deviceStockName="${v.checklistDevice}"`;
+
                         const [deviceUpdateResult] = await db.query(deviceUpdateSql);
 
                         console.log("48264872364287364782364872", deviceUpdateResult);
@@ -293,9 +311,27 @@ app.post("/userReturn", async (req, res) => {
     });
 });
 
+// 撈已借出的清單
+app.get("/checklistData", async (req, res) => {
+    const sql = `SELECT * FROM v_checklistdata WHERE 1`;
+    const [result] = await db.query(sql);
+    console.log(result);
+    const newResult = result.map((v, i) => {
+        v.checklistTime = v.checklistTime.slice(0, 11);
+        return { ...v };
+    });
+    console.log(newResult);
+    try {
+        res.json(newResult);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`伺服器啟動:${port}`));
 
 module.exports = app;
 
 // FIXME: try/catch要包住的範圍要包含sql嗎？
+// TODO: 判斷流程有沒有比較好的寫法？
