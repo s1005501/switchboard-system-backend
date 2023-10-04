@@ -202,10 +202,10 @@ app.post("/userRent", async (req, res) => {
                         INSERT INTO v_checklistdata
                         (sid, checklistCompany,checklistDepartment,checklistDepartmentNumber,
                         checklistDivision, checklistDevice, checklistDeviceDescription,checklistName,
-                        checklistTime,checklistType, checklistExtensionNumber, checklistSignature)
+                        checklistRentTime,checklistType, checklistExtensionNumber, checklistSignature,checklistReturnTime)
                         VALUES (NULL,'${req.body.deviceRentCompany}','${req.body.deviceRentDepartment}','${req.body.deviceRentDepartmentNumber}',
                         '${req.body.deviceRentDivision}','${v.deviceStockName}','${v.deviceStockDescription}','${req.body.deviceRentName}',
-                        '${req.body.deviceRentSubmitTime}','設備','${req.body.deviceRentExtensionNumber}','${req.body.deviceRentSignature}')`;
+                        '${req.body.deviceRentSubmitTime}','設備','${req.body.deviceRentExtensionNumber}','${req.body.deviceRentSignature}','')`;
 
                         const [checklistResult] = await db.query(checklistSql);
                         if (checklistResult.affectedRows) {
@@ -241,7 +241,8 @@ app.post("/userReturnRender", async (req, res) => {
     SElECT v_checklistdata.*,v_userdept.PLANTNAME,v_userdept.UNITID,v_userdept.UNITNAME,v_userdept.DEVISION 
     FROM v_checklistdata,v_userdept 
     WHERE v_userdept.NAME="${req.body.postData}" 
-    AND v_checklistdata.checklistName="${req.body.postData}"`;
+    AND v_checklistdata.checklistName="${req.body.postData}"
+    AND v_checklistdata.checklistReturnTime=""`;
     const [userDataResult] = await db.query(sql);
 
     // console.log("userDataResult", userDataResult);
@@ -264,7 +265,7 @@ app.post("/userReturn", async (req, res) => {
     const output = {
         row: [],
     };
-    console.log(req.body.postData.deviceReturnData);
+    console.log(req.body.postData);
 
     const returnData = req.body.postData.deviceReturnData;
 
@@ -272,11 +273,13 @@ app.post("/userReturn", async (req, res) => {
         output.row = await Promise.all(
             returnData.map(async (v, i) => {
                 try {
-                    console.log(v);
+                    console.log("v", v);
                     const checklistDeleteSql = `
-                    DELETE FROM v_checklistdata 
-                    WHERE v_checklistdata.checklistName="${v.deviceReturnName}" 
-                    AND v_checklistdata.sid=${v.sid}`;
+                    UPDATE v_checklistdata 
+                    SET checklistReturnTime='${req.body.postData.deviceReturnSubmitTime}' 
+                    WHERE v_checklistdata.checklistReturnTime="" 
+                    AND v_checklistdata.checklistName="${v.deviceReturnName}"
+                    AND v_checklistdata.checklistDevice="${v.checklistDevice}"`;
                     const [checklistDeleteResult] = await db.query(checklistDeleteSql);
                     // console.log(checklistDeleteResult);
 
@@ -313,11 +316,12 @@ app.post("/userReturn", async (req, res) => {
 
 // 撈已借出的清單
 app.get("/checklistData", async (req, res) => {
-    const sql = `SELECT * FROM v_checklistdata WHERE 1`;
+    const sql = `SELECT * FROM v_checklistdata WHERE v_checklistdata.checklistReturnTime="";
+    `;
     const [result] = await db.query(sql);
     console.log(result);
     const newResult = result.map((v, i) => {
-        v.checklistTime = v.checklistTime.slice(0, 11);
+        v.checklistRentTime = v.checklistRentTime.slice(0, 11);
         return { ...v };
     });
     console.log(newResult);
