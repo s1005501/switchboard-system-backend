@@ -22,11 +22,6 @@ app.use(cors(corsOption));
 app.post("/test", async (req, res) => {
     console.log("req.body", req.body);
     console.log("test", req.body.postData.deviceStockData);
-    // console.log(req.body);
-    // console.log(req.body);
-    // const sql = "SELECT * FROM `V_USERDEPT` WHERE 1";
-    // const [result] = await db.query(sql);
-    // res.json(result);
 });
 
 // getUserData，撈使用者部門資料
@@ -161,7 +156,9 @@ app.get("/getDeviceStockData", async (req, res) => {
         error: "",
         row: [],
     };
-    const [result] = await db.query(`SELECT * FROM v_devicestockdata WHERE v_devicestockdata.deviceStockRenter=""`);
+    const [result] = await db.query(
+        `SELECT * FROM v_devicestockdata WHERE v_devicestockdata.deviceStockRenter=""`
+    );
 
     try {
         if (result.length) {
@@ -194,7 +191,9 @@ app.post("/userRent", async (req, res) => {
                     SET deviceStockRenter='${req.body.deviceRentName}'
                     WHERE v_devicestockdata.deviceStockName="${v.deviceStockName}"`;
 
-                    const [deviceUpdateResult] = await db.query(deviceUpdateSql);
+                    const [deviceUpdateResult] = await db.query(
+                        deviceUpdateSql
+                    );
                     // console.log(deviceUpdateResult);
 
                     if (deviceUpdateResult.affectedRows) {
@@ -229,7 +228,7 @@ app.post("/userRent", async (req, res) => {
     });
 });
 
-//
+// 歸還者輸入姓名後要去撈其以界用的資料
 app.post("/userReturnRender", async (req, res) => {
     const output = {
         success: false,
@@ -280,7 +279,9 @@ app.post("/userReturn", async (req, res) => {
                     WHERE v_checklistdata.checklistReturnTime="" 
                     AND v_checklistdata.checklistName="${v.deviceReturnName}"
                     AND v_checklistdata.checklistDevice="${v.checklistDevice}"`;
-                    const [checklistDeleteResult] = await db.query(checklistDeleteSql);
+                    const [checklistDeleteResult] = await db.query(
+                        checklistDeleteSql
+                    );
                     // console.log(checklistDeleteResult);
 
                     if (checklistDeleteResult.affectedRows) {
@@ -290,9 +291,14 @@ app.post("/userReturn", async (req, res) => {
                         WHERE v_devicestockdata.deviceStockRenter = "${v.deviceReturnName}"
                         AND v_devicestockdata.deviceStockName="${v.checklistDevice}"`;
 
-                        const [deviceUpdateResult] = await db.query(deviceUpdateSql);
+                        const [deviceUpdateResult] = await db.query(
+                            deviceUpdateSql
+                        );
 
-                        console.log("48264872364287364782364872", deviceUpdateResult);
+                        console.log(
+                            "48264872364287364782364872",
+                            deviceUpdateResult
+                        );
                         if (deviceUpdateResult.affectedRows) {
                             return "success";
                         } else {
@@ -327,6 +333,20 @@ app.get("/checklistData", async (req, res) => {
     console.log(newResult);
     try {
         res.json(newResult);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+// 撈訪客紀錄
+app.get("/visitorListData", async (req, res) => {
+    const sql = `SELECT * FROM v_vistitordata WHERE 1`;
+    const [result] = await db.query(sql);
+    console.log("visitorListResult", result);
+    try {
+        if (result.length) {
+            res.json(result);
+        }
     } catch (error) {
         console.log(error);
     }
