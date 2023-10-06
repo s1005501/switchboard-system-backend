@@ -156,9 +156,7 @@ app.get("/getDeviceStockData", async (req, res) => {
         error: "",
         row: [],
     };
-    const [result] = await db.query(
-        `SELECT * FROM v_devicestockdata WHERE v_devicestockdata.deviceStockRenter=""`
-    );
+    const [result] = await db.query(`SELECT * FROM v_devicestockdata WHERE v_devicestockdata.deviceStockRenter=""`);
 
     try {
         if (result.length) {
@@ -191,9 +189,7 @@ app.post("/userRent", async (req, res) => {
                     SET deviceStockRenter='${req.body.deviceRentName}'
                     WHERE v_devicestockdata.deviceStockName="${v.deviceStockName}"`;
 
-                    const [deviceUpdateResult] = await db.query(
-                        deviceUpdateSql
-                    );
+                    const [deviceUpdateResult] = await db.query(deviceUpdateSql);
                     // console.log(deviceUpdateResult);
 
                     if (deviceUpdateResult.affectedRows) {
@@ -279,9 +275,7 @@ app.post("/userReturn", async (req, res) => {
                     WHERE v_checklistdata.checklistReturnTime="" 
                     AND v_checklistdata.checklistName="${v.deviceReturnName}"
                     AND v_checklistdata.checklistDevice="${v.checklistDevice}"`;
-                    const [checklistDeleteResult] = await db.query(
-                        checklistDeleteSql
-                    );
+                    const [checklistDeleteResult] = await db.query(checklistDeleteSql);
                     // console.log(checklistDeleteResult);
 
                     if (checklistDeleteResult.affectedRows) {
@@ -291,14 +285,9 @@ app.post("/userReturn", async (req, res) => {
                         WHERE v_devicestockdata.deviceStockRenter = "${v.deviceReturnName}"
                         AND v_devicestockdata.deviceStockName="${v.checklistDevice}"`;
 
-                        const [deviceUpdateResult] = await db.query(
-                            deviceUpdateSql
-                        );
+                        const [deviceUpdateResult] = await db.query(deviceUpdateSql);
 
-                        console.log(
-                            "48264872364287364782364872",
-                            deviceUpdateResult
-                        );
+                        console.log("48264872364287364782364872", deviceUpdateResult);
                         if (deviceUpdateResult.affectedRows) {
                             return "success";
                         } else {
@@ -322,8 +311,7 @@ app.post("/userReturn", async (req, res) => {
 
 // 撈已借出的清單
 app.get("/checklistData", async (req, res) => {
-    const sql = `SELECT * FROM v_checklistdata WHERE v_checklistdata.checklistReturnTime="";
-    `;
+    const sql = `SELECT * FROM v_checklistdata WHERE v_checklistdata.checklistReturnTime=""`;
     const [result] = await db.query(sql);
     console.log(result);
     const newResult = result.map((v, i) => {
@@ -343,9 +331,13 @@ app.get("/visitorListData", async (req, res) => {
     const sql = `SELECT * FROM v_vistitordata WHERE 1`;
     const [result] = await db.query(sql);
     console.log("visitorListResult", result);
+    const newResult = result.map((v, i) => {
+        v.visitorSubmitTime = v.visitorSubmitTime.slice(0, 11);
+        return { ...v };
+    });
     try {
         if (result.length) {
-            res.json(result);
+            res.json(newResult);
         }
     } catch (error) {
         console.log(error);
