@@ -21,7 +21,6 @@ app.use(cors(corsOption));
 // test，測試路由
 app.post("/test", async (req, res) => {
     console.log("req.body", req.body);
-    console.log("test", req.body.postData.deviceStockData);
 });
 
 // getUserData，撈使用者部門資料
@@ -38,9 +37,8 @@ app.post("/getUserData", async (req, res) => {
     FROM AconProject.V_USERDEPT 
     where AconProject.V_USERDEPT.NAME='${req.body.postData}'`;
 
-    const [result] = await db.query(sql);
-
     try {
+        const [result] = await db.query(sql);
         if (result.length) {
             output.success = true;
             output.row = result;
